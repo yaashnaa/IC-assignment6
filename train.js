@@ -7,13 +7,13 @@ let cycleCount = 0; // Count of completed breathing cycles
 let color = [255, 100, 150]; // Default circle color
 
 var w = window.innerWidth;
-var h = window.innerHeight;  
+var h = window.innerHeight;
 function preload() {
   handPose = ml5.handPose(); // Load Handpose model
 }
 
 function setup() {
-  canvas=createCanvas(w, h);
+  canvas = createCanvas(w, h);
   angleMode(DEGREES);
 
   video = createCapture(VIDEO);
@@ -21,6 +21,7 @@ function setup() {
   video.hide();
 
   handPose.detectStart(video, gotHands); // Start detecting hands
+  let heading= document.getElementById('heading');
 }
 
 function draw() {
@@ -54,35 +55,34 @@ function draw() {
     displayBreathingState(state, cycleCount);
     drawKaleidoscope(indexFinger, thumb);
     if (leftHand) {
-        let leftIndexFinger = leftHand.keypoints[8];
-        color = getColorFromPosition(leftIndexFinger);
-      }
-  } 
-  else {
-   instructions();
+      let leftIndexFinger = leftHand.keypoints[8];
+      color = getColorFromPosition(leftIndexFinger);
+    }
+  } else {
+    instructions();
   }
-  window.onresize = function() {
+  window.onresize = function () {
     // assigns new values for width and height variables
     w = window.innerWidth;
-    h = window.innerHeight;  
-    canvas.size(w,h);
-  }
+    h = window.innerHeight;
+    canvas.size(w, h);
+  };
 }
 
 function instructions() {
-    fill(255); // Set text color to white
-    textSize(20); // Set text size
-    textAlign(CENTER, CENTER); // Center align the text
-  
-    // Display instructions on the canvas
-    text("Place your hand in the frame to start", width / 2, height / 2 - 60);
-    text("Ensure the hand is well-lit", width / 2, height / 2 - 30);
-    text("Close your hand to 'Inhale'", width / 2, height / 2);
-    text("Open your hand to 'Exhale'", width / 2, height / 2 + 30);
-    text("Adjust the distance between fingers to change the pattern", width / 2, height / 2 + 60);
-    text("Move your left hand to change the color", width / 2, height / 2 + 90);
-  }
-  
+  let instructionDiv = getElementById("instructions");
+  instructionDiv.innerHtml = `
+        <p>Place your hand in the frame</p>
+    <p>Ensure the hand is well-lit</p>
+    <p>Close your hand to 'Inhale'</p>
+    <p>Open your hand to 'Exhale'</p>
+    <p>Adjust the distance between fingers to change the pattern</p>
+    <p>Move your left hand to change the color</p>`;
+  fill(255); // Set text color to white
+  textSize(20); // Set text size
+  textAlign(CENTER, CENTER); // Center align the text
+
+}
 
 // Function to display the breathing state and cycle count
 function displayBreathingState(state, cycleCount) {
@@ -94,11 +94,10 @@ function displayBreathingState(state, cycleCount) {
   } else {
     text("Inhale... Slowly close your hand", width / 2, 50);
   }
-  
+
   // Cycle count
   textSize(20);
   text(`Breathing Cycles: ${cycleCount}`, width / 2, height - 20);
-
 }
 
 // Function to draw the kaleidoscope pattern
@@ -129,7 +128,6 @@ function drawPattern(indexFinger, thumb) {
   if (posX > -50 && posX < 50) posX = posX < 0 ? -50 : 50; // Push away from the center on X-axis
   if (posY > -50 && posY < 50) posY = posY < 0 ? -50 : 50; // Push away from the center on Y-axis
 
-
   noStroke();
   fill(color[0], color[1], color[2], 150); // Semi-transparent fill
   ellipse(posX, posY, size, size);
@@ -140,12 +138,12 @@ function gotHands(results) {
   hands = results;
 }
 function getColorFromPosition(finger) {
-    let x = finger.x;
-    let y = finger.y;
-  
-    let r = map(x, 0, width, 100, 255);
-    let g = map(y, 0, height, 100, 255);
-    let b = map(x + y, 0, width + height, 200, 100);
-  
-    return [r, g, b];
-  }
+  let x = finger.x;
+  let y = finger.y;
+
+  let r = map(x, 0, width, 100, 255);
+  let g = map(y, 0, height, 100, 255);
+  let b = map(x + y, 0, width + height, 200, 100);
+
+  return [r, g, b];
+}

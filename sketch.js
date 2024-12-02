@@ -5,12 +5,17 @@ let state = "Inhale"; // Current breathing state
 let lastState = ""; // Previous state for detecting transitions
 let cycleCount = 0; // Count of completed breathing cycles
 let color = [255, 100, 150]; // Default circle color
-
+let bodyPose;
+let poses = [];
+let rotationAngle = 0;
+let symmetry;
+let angle;
+let connections;
 var w = window.innerWidth;
 var h = window.innerHeight;
-let canvas;
+let canvas, mapMouseX, mapMouseY;
 function preload() {
-  handPose = ml5.handPose(); // Load Handpose model
+  handPose = ml5.handPose();
 }
 
 function setup() {
@@ -53,14 +58,14 @@ function draw() {
       }
       lastState = "Inhale";
     }
+    if (leftHand) {
+        let leftIndexFinger = leftHand.keypoints[8];
+        color = getColorFromPosition(leftIndexFinger);
+      }
 
     // Display breathing state and update visuals
     displayBreathingState(state, cycleCount);
     drawKaleidoscope(indexFinger, thumb);
-    if (leftHand) {
-      let leftIndexFinger = leftHand.keypoints[8];
-      color = getColorFromPosition(leftIndexFinger);
-    }
   } else {
     instructions(true);
   }
@@ -68,6 +73,10 @@ function draw() {
 function windowResized() {
   // Resize canvas when the window size changes
   resizeCanvas(windowWidth, windowHeight);
+}
+
+function gotPoses(results) {
+  poses = results;
 }
 
 function instructions(visible) {
@@ -96,9 +105,9 @@ function displayBreathingState(state, cycleCount) {
   textSize(24);
   textAlign(CENTER, CENTER);
   if (state === "Inhale") {
-    text("Exhale... Slowly open your hand", width / 2, 50);
+    text("Exhale", width / 2, 50);
   } else {
-    text("Inhale... Slowly close your hand", width / 2, 50);
+    text("Inhale", width / 2, 50);
   }
 
   // Cycle count
@@ -108,37 +117,44 @@ function displayBreathingState(state, cycleCount) {
 
 // Function to draw the kaleidoscope pattern
 function drawKaleidoscope(indexFinger, thumb) {
-  translate(width / 2, height / 2);
-  let symmetry = 12; // Number of kaleidoscope sections
-  let angleStep = 360 / symmetry;
-
-  for (let i = 0; i < symmetry; i++) {
-    let angle = i * angleStep;
-
-    push();
-    rotate(angle);
-    drawPattern(indexFinger, thumb);
-    pop();
+    let dynamicSymmetry = int(map(mouseX, 0, width, 3, 12));
+    let angleStep = 360 / dynamicSymmetry;
+    let dynamicBrightness = map(mouseY, 0, height, 50, 255); // Adjust brightness with mouseY
+    
+    translate(width / 2, height / 2);
+    rotationAngle += .6;
+    rotate(rotationAngle);
+  
+    let distance = dist(indexFinger.x, indexFinger.y, thumb.x, thumb.y); // Distance between thumb and indexFinger
+    let sizeFactor = map(distance, 30, 200, 0.5, 2); // Map distance to a noticeable scale factor
+  
+    for (let i = 0; i < dynamicSymmetry; i++) {
+      let angle = i * angleStep;
+      push();
+      rotate(angle);
+      drawPattern(indexFinger, thumb, dynamicBrightness, sizeFactor);
+      pop();
+    }
   }
-}
-
-// Function to draw the breathing pattern
-function drawPattern(indexFinger, thumb) {
-  let distance = dist(indexFinger.x, indexFinger.y, thumb.x, thumb.y);
-  let size = map(distance, 0, 200, 30, 100);
-  if (size < 80) size = 80;
-
-  let posX = indexFinger.x - width / 2;
-  let posY = indexFinger.y - height / 2;
-
-  if (posX > -50 && posX < 50) posX = posX < 0 ? -50 : 50; // Push away from the center on X-axis
-  if (posY > -50 && posY < 50) posY = posY < 0 ? -50 : 50; // Push away from the center on Y-axis
-
-  noStroke();
-  fill(color[0], color[1], color[2], 150); // Semi-transparent fill
-  ellipse(posX, posY, size, size);
-}
-
+  
+  function drawPattern(indexFinger, thumb, brightness, sizeFactor) {
+    let distance = dist(indexFinger.x, indexFinger.y, thumb.x, thumb.y);
+  
+    // Calculate the position of the circle
+    let scaleFactor = map(distance, 0, 200, 1.5, 0.5);
+    let posX = (indexFinger.x - width / 2) * scaleFactor;
+    let posY = (indexFinger.y - height / 2) * scaleFactor;
+  
+    // Adjust size based on hand distance
+    let size = map(distance, 30, 200, 20, 100) * sizeFactor;
+    size = constrain(size, 5, 200); // Constrain size to avoid extreme values
+  
+    fill(color[0], color[1], brightness, 150); // Use brightness from mouseY
+    noStroke();
+    ellipse(posX, posY, size, size);
+  }
+  
+  
 // Callback for hand detection results
 function gotHands(results) {
   hands = results;
@@ -147,9 +163,9 @@ function getColorFromPosition(finger) {
   let x = finger.x;
   let y = finger.y;
 
-  let r = map(x, 0, width, 100, 255);
-  let g = map(y, 0, height, 100, 255);
-  let b = map(x + y, 0, width + height, 200, 100);
+  let r = map(x, 0, width, 50, 255);
+  let g = map(y, 0, height, 50, 255);
+  let b = map(x + y, 0, width + height, 100, 255);
 
   return [r, g, b];
 }

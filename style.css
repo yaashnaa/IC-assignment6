@@ -20,7 +20,7 @@ canvas {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1; /* Ensure the canvas stays behind other elements */
+  z-index: 1; 
   background-color: #00111a;
 }
 
@@ -33,7 +33,7 @@ h1 {
   transform: translate(-50%, -50%);
   color: white;
   text-align: center;
-  z-index: 2; /* Ensure it stays above the canvas */
+  z-index: 2; 
 }
 
 #instructions {
@@ -47,6 +47,6 @@ h1 {
   text-align: center;
   line-height: 1.5;
   font-family: "Poiret One", cursive;
-  width: 80%; /* Optional: Adjust width to control layout */
-  z-index: 2; /* Ensure it appears above the canvas */
+  width: 80%; 
+  z-index: 2; 
 }
